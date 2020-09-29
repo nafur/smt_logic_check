@@ -13,7 +13,7 @@ def generate(logic):
     if lname == 'QF_A':
         lname = 'QF_AX'
     if 'T' in logic:
-        if not ra:
+        if not 'NRA' in logic:
             return
     decls = []
     asserts = []
@@ -201,11 +201,12 @@ def status(out, err):
         out = re.sub(p, '', out)
 
     res = {
-        'unknown function/constant ([a-zA-Z_.]+)': 'unsupported {}',
         'ignoring unsupported logic ([A-Z_]+) line': 'unsupported logic {}',
-        'unknown logic: ([A-Z_]+)': 'unknown logic {}',
         'logic ([A-Z_]+) is not supported': 'unsupported logic {}',
         'unknown command: ([a-zA-Z-]+)"': 'unsupported command {}',
+        'unknown function/constant ([a-zA-Z_.]+)': 'unsupported {}',
+        'unknown logic: ([A-Z_]+)': 'unknown logic {}',
+        'unknown symbol: ([a-zA-Z-]+)"': 'unsupported symbol {}',
     }
 
     for r in res:
@@ -245,10 +246,12 @@ for s in solvers:
         inp = filter(lambda i: 'A' not in benchlogics[i] or 'FP' not in benchlogics[i], inp)
         inp = filter(lambda i: 'NRA' not in benchlogics[i] or 'S' not in benchlogics[i], inp)
     if re.match('mathsat-.*', s):
-        print('\tString not supported')
         print('\tDatatypes not supported')
+        print('\tString not supported')
+        print('\tTranscendentals not supported')
         inp = filter(lambda i: 'S' not in benchlogics[i], inp)
         inp = filter(lambda i: 'DT' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'T' not in benchlogics[i], inp)
     for i in inp:
         start = time.time()
         out,err = run(solvers[s] + [i])
