@@ -233,6 +233,8 @@ def status(out, err):
         result = 'sat'
     if re.search('^unsat$', out, flags = re.M) != None:
         result = 'unsat'
+    if re.match('(un)?sat', out) != None:
+        out = ''
     
     return (errors, result, out, err)
 
@@ -261,4 +263,7 @@ for s in solvers:
         if errs != [] or result is None:
             print('\t{}: {} ({:0.2f}s)'.format(i, result, dur))
             print('\t\t{}'.format(' // '.join(errs)))
-            print(err)
+            if err != '':
+                print(err)
+            if out != '':
+                print(out)
