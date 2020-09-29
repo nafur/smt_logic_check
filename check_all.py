@@ -166,7 +166,7 @@ for i in inputs:
         benchlogics[i] = []
 
 solvers = {
-#    'cvc4': ['/home/gereon/cvc4_master/build/bin/cvc4', '--theoryof-mode=type', '--strings-exp', '--no-nl-ext', '--nl-icp', '--nl-cad', '--nl-rlv=interleave'],
+    'cvc4-0f77646': ['bin/cvc4-0f77646', '--strings-exp', '--theoryof-mode=type', '--nl-ext', '--nl-cad'],
     'mathsat-5.6': ['bin/mathsat-5.6.3'],
     'mathsat-5.5': ['bin/mathsat-5.5.4'],
     'yices-2.6.2': ['bin/yices-smt2-2.6.2'],
@@ -185,6 +185,14 @@ def run(cmd):
 def status(out, err):
     errors = []
 
+    purger = [
+        '; ignoring unsupported logic [A-Z_]+ line: [0-9]+ position: [0-9]+',
+    ]
+
+    for p in purger:
+        err = re.sub(p, '', err)
+        out = re.sub(p, '', out)
+
     res = {
         'unknown function/constant ([a-zA-Z_.]+)': 'unsupported {}',
         'ignoring unsupported logic ([A-Z_]+) line': 'unsupported logic {}',
@@ -200,6 +208,14 @@ def status(out, err):
         m = re.search(r, out)
         if m != None:
             errors.append(res[r].format(*m.groups()))
+    
+    purger = [
+        '; ignoring unsupported logic [A-Z_]+ line: [0-9]+ position: [0-9]+',
+    ]
+
+    for p in purger:
+        err = re.sub(p, '', err)
+        out = re.sub(p, '', out)
 
     if err != '' and errors == '':
         print("No errors detected within:\n{}".format(err))
@@ -210,35 +226,8 @@ def status(out, err):
     if re.search('^unsat$', out, flags = re.M) != None:
         result = 'unsat'
     
-    return (errors, result)
+    return (errors, result, out, err)
 
-    unsup_res = [
-        re.compile('\(error "Undeclared type: ([A-Za-z]+)"'),
-        re.compile('unknown logic: ([A-Z_]+)'),
-        re.compile('logic ([A-Z_]+) is not supported'),
-        re.compile('ignoring unsupported logic ([A-Z_]+) line'),
-    ]
-    for r in unsup_res:
-        m = r.search(out)
-        if m is not None:
-            return '{} not supported'.format(m.group(1))
-        m = r.search(err)
-        if m is not None:
-            return '{} not supported'.format(m.group(1))
-    
-    error_res = [
-        re.compile('Fatal failure within'),
-    ]
-    for r in error_res:
-        m = r.search(out)
-        if m is not None:
-            return 'Assertion failure'
-        m = r.search(err)
-        if m is not None:
-            return 'Assertion failure'
-
-
-    return '{} - {}'.format(out, err)
 
 for s in solvers:
     print('{}:'.format(s))
@@ -258,8 +247,8 @@ for s in solvers:
         out,err = run(solvers[s] + [i])
         dur = time.time() - start
 
-        errs, result = status(out, err)
-        if err != "" or result is None:
+        errs, result, out, err = status(out, err)
+        if errs != [] or result is None:
             print('\t{}: {} ({:0.2f}s)'.format(i, result, dur))
             print('\t\t{}'.format(' // '.join(errs)))
             print(err)
