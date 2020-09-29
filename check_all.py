@@ -233,11 +233,11 @@ def status(out, err):
 for s in solvers:
     print('{}:'.format(s))
     inp = inputs
-    if s == 'cvc4':
+    if re.match('cvc4-.*', s):
         print('\tAFP not supported (#5094)')
-        print('\tCurrently without --symfpu')
+        print('\tSNRA not supported (#5109 / #5111)')
         inp = filter(lambda i: 'A' not in benchlogics[i] or 'FP' not in benchlogics[i], inp)
-        inp = filter(lambda i: 'FP' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'NRA' not in benchlogics[i] or 'S' not in benchlogics[i], inp)
     if re.match('mathsat-.*', s):
         print('\tString not supported')
         print('\tDatatypes not supported')
