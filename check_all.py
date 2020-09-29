@@ -6,10 +6,11 @@ import re
 import subprocess
 import time
 
-def generate(logic):
+def generate(logic, lname = None):
     ia = any([l in logic for l in ['IDL', 'LIA', 'LIRA', 'NIA', 'NIRA']])
     ra = any([l in logic for l in ['LIRA', 'LRA', 'NIRA', 'NRA', 'RDL']])
-    lname = ''.join(logic)
+    if lname is None:
+        lname = ''.join(logic)
     if lname == 'QF_A':
         lname = 'QF_AX'
 
@@ -17,7 +18,7 @@ def generate(logic):
     benchlogics[filename] = logic
 
     if 'T' in logic:
-        if not 'NRA' in logic:
+        if not 'NRA' in logic and not 'NIRA' in logic:
             return
     decls = []
     asserts = []
@@ -166,6 +167,7 @@ benchlogics = {}
 
 for comb in itertools.product(*theories):
     generate(comb)
+generate('QF_AUFBVFPDTSNIRAT', 'QF_ALL')
 
 inputs = sorted(glob.glob('tcbench/*.smt2'))
 for i in inputs:
@@ -270,6 +272,15 @@ for s in solvers:
         print('\tString not supported')
         print('\tTranscendentals not supported')
         inp = filter(lambda i: 'BV' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'FP' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'S' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'DT' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'T' not in benchlogics[i], inp)
+    if re.match('yices-.*', s):
+        print('\tDatatypes not supported')
+        print('\tFloating-Point not supported')
+        print('\tString not supported')
+        print('\tTranscendentals not supported')
         inp = filter(lambda i: 'FP' not in benchlogics[i], inp)
         inp = filter(lambda i: 'S' not in benchlogics[i], inp)
         inp = filter(lambda i: 'DT' not in benchlogics[i], inp)
