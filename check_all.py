@@ -166,10 +166,11 @@ for i in inputs:
         benchlogics[i] = []
 
 solvers = {
-    'cvc4': ['/home/gereon/cvc4_master/build/bin/cvc4', '--theoryof-mode=type', '--strings-exp', '--no-nl-ext', '--nl-icp', '--nl-cad', '--nl-rlv=interleave'],
-    'mathsat': ['mathsat'],
-    'yices': ['yices-smt2'],
-    'z3': ['z3'],
+#    'cvc4': ['/home/gereon/cvc4_master/build/bin/cvc4', '--theoryof-mode=type', '--strings-exp', '--no-nl-ext', '--nl-icp', '--nl-cad', '--nl-rlv=interleave'],
+    'mathsat-5.6': ['bin/mathsat-5.6.3'],
+    'mathsat-5.5': ['bin/mathsat-5.5.4'],
+    'yices-2.6.2': ['bin/yices-smt2-2.6.2'],
+    'z3-4.8.9': ['bin/z3-4.8.9'],
 }
 
 def run(cmd):
@@ -202,20 +203,14 @@ def status(out, err):
 
     if err != '' and errors == '':
         print("No errors detected within:\n{}".format(err))
-    
-    errors = ' // '.join(errors)
 
-    
+    result = None
     if re.search('^sat$', out, flags = re.M) != None:
-        if errors == '':
-            return 'sat'
-        return errors + ' (sat)'
+        result = 'sat'
     if re.search('^unsat$', out, flags = re.M) != None:
-        if errors == '':
-            return 'unsat'
-        return errors + ' (unsat)'
+        result = 'unsat'
     
-    return errors
+    return (errors, result)
 
     unsup_res = [
         re.compile('\(error "Undeclared type: ([A-Za-z]+)"'),
@@ -253,7 +248,7 @@ for s in solvers:
         print('\tCurrently without --symfpu')
         inp = filter(lambda i: 'A' not in benchlogics[i] or 'FP' not in benchlogics[i], inp)
         inp = filter(lambda i: 'FP' not in benchlogics[i], inp)
-    if s == 'mathsat':
+    if re.match('mathsat-.*', s):
         print('\tString not supported')
         print('\tDatatypes not supported')
         inp = filter(lambda i: 'S' not in benchlogics[i], inp)
@@ -262,7 +257,9 @@ for s in solvers:
         start = time.time()
         out,err = run(solvers[s] + [i])
         dur = time.time() - start
-        out = '\n'.join(out.split(os.linesep)[:1000])
-        err = '\n'.join(err.split(os.linesep)[:1000])
-        #open('out.{}'.format(s), 'w').write('{}\n\n#####\n\n{}'.format(err, out))
-        print('\t{}: {} ({:0.2f}s)'.format(i, status(out, err), dur))
+
+        errs, result = status(out, err)
+        if err != "" or result is None:
+            print('\t{}: {} ({:0.2f}s)'.format(i, result, dur))
+            print('\t\t{}'.format(' // '.join(errs)))
+            print(err)
