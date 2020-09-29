@@ -12,6 +12,10 @@ def generate(logic):
     lname = ''.join(logic)
     if lname == 'QF_A':
         lname = 'QF_AX'
+
+    filename = 'tcbench/{}.generated.smt2'.format(lname)
+    benchlogics[filename] = logic
+
     if 'T' in logic:
         if not 'NRA' in logic:
             return
@@ -136,9 +140,6 @@ def generate(logic):
     if ra and 'S' in logic:
         pass
 
-    filename = 'tcbench/{}.generated.smt2'.format(lname)
-    benchlogics[filename] = logic
-
     f = open(filename, 'w')
     for d in decls:
         f.write('{}\n'.format(d))
@@ -176,6 +177,7 @@ solvers = {
     'cvc4-0f77646': ['bin/cvc4-0f77646', '--strings-exp', '--theoryof-mode=type', '--nl-ext', '--nl-cad'],
     'mathsat-5.6': ['bin/mathsat-5.6.3'],
     'mathsat-5.5': ['bin/mathsat-5.5.4'],
+    'smtinterpol-2.5': ['java', '-jar', 'bin/smtinterpol-2.5.jar'],
     'yices-2.6.2': ['bin/yices-smt2-2.6.2'],
     'z3-4.8.9': ['bin/z3-4.8.9'],
 }
@@ -189,7 +191,12 @@ def run(cmd):
         out, err = proc.communicate()
     return (out.decode('utf8').strip(), err.decode('utf8').strip())
 
-def status(out, err):
+def status(solver, out, err):
+
+    if re.match('smtinterpol-.*', solver):
+        if re.match('unsupported.*', out):
+            return (['unsupported logic'], None, '', '')
+
     errors = []
 
     purger = [
@@ -256,12 +263,24 @@ for s in solvers:
         inp = filter(lambda i: 'S' not in benchlogics[i], inp)
         inp = filter(lambda i: 'DT' not in benchlogics[i], inp)
         inp = filter(lambda i: 'T' not in benchlogics[i], inp)
+    if re.match('smtinterpol-.*', s):
+        print('\tBitvectors not supported')
+        print('\tFloating-Point not supported')
+        print('\tDatatypes not supported')
+        print('\tString not supported')
+        print('\tTranscendentals not supported')
+        inp = filter(lambda i: 'BV' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'FP' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'S' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'DT' not in benchlogics[i], inp)
+        inp = filter(lambda i: 'T' not in benchlogics[i], inp)
+
     for i in inp:
         start = time.time()
         out,err = run(solvers[s] + [i])
         dur = time.time() - start
 
-        errs, result, out, err = status(out, err)
+        errs, result, out, err = status(s, out, err)
         if errs != [] or result is None:
             print('\t{}: {} ({:0.2f}s)'.format(i, result, dur))
             if errs != []:

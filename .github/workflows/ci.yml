@@ -6,12 +6,13 @@ jobs:
     name: test solvers
     runs-on: ubuntu-latest
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: '3'
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '14'
       - name: Run tests
         run: |
           python3 check_all.py
