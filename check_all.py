@@ -262,7 +262,8 @@ for s in solvers:
         errs, result, out, err = status(out, err)
         if errs != [] or result is None:
             print('\t{}: {} ({:0.2f}s)'.format(i, result, dur))
-            print('\t\t{}'.format(' // '.join(errs)))
+            if errs != []:
+                print('\t\t{}'.format('\n\t\t'.join(errs)))
             if err != '':
                 print(err)
             if out != '':
