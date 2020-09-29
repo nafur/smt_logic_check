@@ -197,8 +197,8 @@ def status(out, err):
     ]
 
     for p in purger:
-        err = re.sub(p, '', err)
-        out = re.sub(p, '', out)
+        err = re.sub(p, '', err, re.M)
+        out = re.sub(p, '', out, re.M)
 
     res = {
         'ignoring unsupported logic ([A-Z_]+) line': 'unsupported logic {}',
@@ -216,14 +216,6 @@ def status(out, err):
         m = re.search(r, out)
         if m != None:
             errors.append(res[r].format(*m.groups()))
-    
-    purger = [
-        '; ignoring unsupported logic [A-Z_]+ line: [0-9]+ position: [0-9]+',
-    ]
-
-    for p in purger:
-        err = re.sub(p, '', err)
-        out = re.sub(p, '', out)
 
     if err != '' and errors == '':
         print("No errors detected within:\n{}".format(err))
@@ -235,6 +227,16 @@ def status(out, err):
         result = 'unsat'
     if re.match('(un)?sat', out) != None:
         out = ''
+    
+    purger = [
+        '; ignoring unsupported logic [A-Z_]+ line: [0-9]+ position: [0-9]+',
+        '\(error "unknown logic: [A-Z_]+"\).*',
+        '\(error "logic [A-Z_]+ is not supported"\).*',
+    ]
+
+    for p in purger:
+        err = re.sub(p, '', err, flags = re.M | re.DOTALL)
+        out = re.sub(p, '', out, flags = re.M | re.DOTALL)
     
     return (errors, result, out, err)
 
