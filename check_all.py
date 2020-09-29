@@ -166,6 +166,7 @@ for i in inputs:
         benchlogics[i] = []
 
 solvers = {
+    'cvc4-1.8': ['bin/cvc4-1.8', '--strings-exp', '--nl-ext', '--nl-ext-tplanes'],
     'cvc4-0f77646': ['bin/cvc4-0f77646', '--strings-exp', '--theoryof-mode=type', '--nl-ext', '--nl-cad'],
     'mathsat-5.6': ['bin/mathsat-5.6.3'],
     'mathsat-5.5': ['bin/mathsat-5.5.4'],
