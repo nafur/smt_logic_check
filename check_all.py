@@ -12,6 +12,9 @@ def generate(logic):
     lname = ''.join(logic)
     if lname == 'QF_A':
         lname = 'QF_AX'
+    if 'T' in logic:
+        if not ra:
+            return
     decls = []
     asserts = []
     decls.append('(set-logic {})'.format(lname))
@@ -57,6 +60,8 @@ def generate(logic):
     if 'S' in logic:
         decls.append('(declare-fun s () String)')
         asserts.append('(str.in_re s (str.to_re "ab+c"))')
+    if 'T' in logic:
+        asserts.append('(> r1 (tan r2))')
     
     if 'A' in logic and 'UF' in logic:
         decls.append('(declare-fun auf () (Array S1 S2))')
@@ -153,6 +158,7 @@ theories = [
     ['', 'DT'],
     ['', 'S'],
     ['', 'IDL', 'LIA', 'LIRA', 'LRA', 'NIA', 'NIRA', 'NRA', 'RDL'],
+    ['', 'T'],
 ]
 
 benchlogics = {}
