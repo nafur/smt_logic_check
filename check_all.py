@@ -137,7 +137,10 @@ def generate(logic, lname = None):
     if 'NIRA' in logic or 'NRA' in logic:
         asserts.append('(and (> r1 7) (= (* r1 r2) (* r1 r1 r1)))')
     if ia and 'S' in logic:
-        asserts.append('(and (> (* (str.len s) (str.len s)) i1) (= (str.indexof s "a" i2) i1))')
+        if 'NIA' in logic or 'NIRA' in logic:
+            asserts.append('(and (> (* (str.len s) (str.len s)) i1) (= (str.indexof s "a" i2) i1))')
+        else:
+            asserts.append('(and (> (str.len s) i1) (= (str.indexof s "a" i2) i1))')
     if ra and 'S' in logic:
         pass
 
@@ -225,9 +228,6 @@ def status(solver, out, err):
         m = re.search(r, out)
         if m != None:
             errors.append(res[r].format(*m.groups()))
-
-    if err != '' and errors == '':
-        print("No errors detected within:\n{}".format(err))
 
     result = None
     if re.search('^sat$', out, flags = re.M) != None:
